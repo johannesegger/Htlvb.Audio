@@ -3,10 +3,28 @@ using NAudio.Wave;
 
 using var sampleReader = new MediaFoundationReader("sample.wav");
 float[] data = sampleReader.ToSampleProvider().ReadToEnd();
-AudioPlayer soundPlayer = new(data, sampleReader.WaveFormat.SampleRate, sampleReader.WaveFormat.Channels);
-using CancellationTokenSource cts = new(TimeSpan.FromSeconds(2));
-var t = soundPlayer.Play(cts.Token);
-await t;
+Console.WriteLine($"Sample rate: {sampleReader.WaveFormat.SampleRate}");
+Audio audio = new(data, sampleReader.WaveFormat.SampleRate, sampleReader.WaveFormat.Channels);
+AudioPlayer audioPlayer = new(audio);
+WriteAudioPlayerState(audioPlayer);
+audioPlayer.Play();
+WriteAudioPlayerState(audioPlayer);
+await Task.Delay(2000);
+audioPlayer.Pause();
+WriteAudioPlayerState(audioPlayer);
+await Task.Delay(2000);
+audioPlayer.Play();
+WriteAudioPlayerState(audioPlayer);
+await Task.Delay(2000);
+audioPlayer.Stop();
+WriteAudioPlayerState(audioPlayer);
+
+// audio.SaveAs?Mp3("out.mp3");
+
+void WriteAudioPlayerState(AudioPlayer audioPlayer)
+{
+    Console.WriteLine($"IsStopped: {audioPlayer.IsStopped}, IsPaused: {audioPlayer.IsPaused}, IsRunning: {audioPlayer.IsRunning}, Position: {audioPlayer.Position}");
+}
 
 public static class SampleProviderExtensions
 {

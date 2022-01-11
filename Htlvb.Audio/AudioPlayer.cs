@@ -1,39 +1,64 @@
-﻿using NAudio.Wave;
+﻿using NAudio.Utils;
+using NAudio.Wave;
 
 namespace Htlvb.Audio;
 
-public class AudioPlayer
+public class AudioPlayer : IDisposable
 {
-    public AudioPlayer(float[] samples, int samplesPerSecond, int channels)
+    private WaveOutEvent? waveOut;
+
+    public AudioPlayer(Audio audio)
     {
-        Samples = samples ?? throw new ArgumentNullException(nameof(samples));
-        SamplesPerSecond = samplesPerSecond > 0 ? samplesPerSecond : throw new ArgumentException("Sample rate must be positive.");;
-        Channels = channels > 0 ? channels : throw new ArgumentException("Number of channels must be positive.");
+        Audio = audio ?? throw new ArgumentNullException(nameof(audio));
     }
 
-    public float[] Samples { get; }
-    public int SamplesPerSecond { get; }
-    public int Channels { get; }
+    public Audio Audio { get; }
 
-
-    public async Task Play(CancellationToken ct = default)
+    public bool IsStopped => waveOut == null || waveOut.PlaybackState == PlaybackState.Stopped;
+    public bool IsRunning => waveOut != null && waveOut.PlaybackState == PlaybackState.Playing;
+    public bool IsPaused => waveOut != null && waveOut.PlaybackState == PlaybackState.Paused;
+    public TimeSpan Position
     {
-        using WaveOutEvent wo = new();
-        var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(SamplesPerSecond, Channels);
-        ISampleProvider sample = new InMemorySampleProvider(waveFormat, Samples, 0, Samples.Length);
-        wo.Init(sample);
-        wo.Play();
-        TaskCompletionSource tcs = new();
-        EventHandler<StoppedEventArgs> playbackStopped = (s, e) =>
+        get
         {
-            tcs.SetResult();
-        };
-        ct.Register(() =>
+            if (waveOut == null)
+            {
+                return TimeSpan.Zero;
+            }
+            return waveOut.GetPositionTimeSpan();
+        }
+    }
+
+    public void Play()
+    {
+        if (waveOut != null)
         {
-            wo.PlaybackStopped -= playbackStopped;
-            tcs.SetCanceled();
-        });
-        wo.PlaybackStopped += playbackStopped;
-        await tcs.Task;
+            waveOut.Play();
+        }
+        else
+        {
+            waveOut = new();
+            var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(Audio.SamplesPerSecond, Audio.Channels);
+            ISampleProvider sample = new InMemorySampleProvider(waveFormat, Audio.Samples, 0, Audio.Samples.Length);
+            waveOut.Init(sample);
+            waveOut.Play();
+        }
+    }
+
+    public void Stop()
+    {
+        waveOut?.Stop();
+        waveOut = null;
+    }
+
+    public void Pause()
+    {
+        waveOut?.Pause();
+    }
+
+    public void Dispose()
+    {
+        waveOut?.Dispose();
+        waveOut = null;
     }
 }
