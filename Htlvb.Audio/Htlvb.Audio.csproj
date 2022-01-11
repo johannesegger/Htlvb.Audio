@@ -8,7 +8,7 @@
 	
   <PropertyGroup>
     <PackageId>Htlvb.Audio</PackageId>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Authors>Johannes Egger</Authors>
     <Company>HTLVB</Company>
     <Description>Helper classes to work with audio data.</Description>
