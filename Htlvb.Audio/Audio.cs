@@ -12,4 +12,5 @@ public class Audio
     public float[] Samples { get; }
     public int SamplesPerSecond { get; }
     public int Channels { get; }
+    public TimeSpan Duration => TimeSpan.FromSeconds((double)Samples.Length / SamplesPerSecond / Channels);
 }
