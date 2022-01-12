@@ -5,6 +5,7 @@ using var sampleReader = new MediaFoundationReader("sample.wav");
 float[] data = sampleReader.ToSampleProvider().ReadToEnd();
 Console.WriteLine($"Sample rate: {sampleReader.WaveFormat.SampleRate}");
 Audio audio = new(data, sampleReader.WaveFormat.SampleRate, sampleReader.WaveFormat.Channels);
+Console.WriteLine($"Duration: {audio.Duration}");
 AudioPlayer audioPlayer = new(audio);
 WriteAudioPlayerState(audioPlayer);
 audioPlayer.Play();
